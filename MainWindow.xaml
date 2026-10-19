@@ -1,0 +1,130 @@
+<!-- Copyright (c) Microsoft Corporation. All rights reserved.
+     Licensed under the MIT License. Gallery 壳层适配来源见 LICENSE.WinUI-Gallery.txt。 -->
+<Window x:Class="ModelDesk.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:ModelDesk"
+        Title="ModelDesk · 本地模型工作台">
+ <Window.SystemBackdrop><MicaBackdrop /></Window.SystemBackdrop>
+ <!-- 从固定版本 Gallery MainWindow 提取两行 RootGrid、TitleBar 和 NavigationView。 -->
+ <Grid x:Name="RootGrid" Loaded="RootGrid_Loaded">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+  <TitleBar x:Name="ShellTitleBar" Title="ModelDesk" Subtitle="本地模型工作台"
+            IsBackButtonVisible="False" IsPaneToggleButtonVisible="True"
+            PaneToggleRequested="TitleBar_PaneToggleRequested">
+   <TitleBar.IconSource><FontIconSource Glyph="&#xE950;"/></TitleBar.IconSource>
+  </TitleBar>
+  <NavigationView x:Name="Navigation" Grid.Row="1" Canvas.ZIndex="0"
+                  IsBackButtonVisible="Collapsed" IsPaneToggleButtonVisible="False" IsTabStop="False"
+                  PaneDisplayMode="Auto" OpenPaneLength="240" ExpandedModeThresholdWidth="1000"
+                  CompactModeThresholdWidth="640" IsSettingsVisible="True"
+                  SelectionChanged="Navigation_SelectionChanged">
+   <NavigationView.MenuItems>
+    <NavigationViewItem x:Name="OverviewNavigationItem" Content="概览" Tag="overview" Icon="Home" IsSelected="True"/>
+    <NavigationViewItem Content="任务与日志" Tag="logs" Icon="Document"/>
+   </NavigationView.MenuItems>
+   <Grid Background="{ThemeResource GalleryBackgroundBrush}" BorderBrush="{ThemeResource GalleryBorderBrush}"
+         BorderThickness="1,1,0,0" CornerRadius="8,0,0,0">
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+    <!-- Gallery PageHeader 的原生标题、HeadingLevel 与 SettingsPage 页边距。 -->
+    <StackPanel Margin="36,24,36,20" Spacing="8">
+     <TextBlock x:Name="PageTitle" Text="概览" AutomationProperties.HeadingLevel="Level1"
+                Style="{StaticResource TitleTextBlockStyle}" TextTrimming="CharacterEllipsis"/>
+     <TextBlock x:Name="PageDescription" Text="管理本地模型，查看真实推理与硬件状态。"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+    </StackPanel>
+    <InfoBar x:Name="Notice" Grid.Row="1" Margin="36,0,36,12" IsOpen="False" IsClosable="True"/>
+    <Grid Grid.Row="2" Margin="36,0,36,24">
+     <ScrollViewer x:Name="PageScroller" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+      <Grid MaxWidth="1064" HorizontalAlignment="Stretch">
+       <StackPanel x:Name="OverviewPage" Spacing="20">
+        <Border Style="{StaticResource GalleryCardStyle}">
+         <StackPanel Spacing="16">
+          <Grid ColumnSpacing="16" Height="68">
+           <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+           <StackPanel Spacing="8">
+            <TextBlock x:Name="StateText" Text="正在检测" Style="{StaticResource SubtitleHeadingTextBlockStyle}" TextTrimming="CharacterEllipsis" MaxLines="1"/>
+            <TextBlock x:Name="ModelText" TextTrimming="CharacterEllipsis" MaxLines="1" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+           </StackPanel>
+           <ProgressRing x:Name="LoadingRing" Grid.Column="1" Width="28" Height="28" IsActive="False"/>
+          </Grid>
+          <TextBlock x:Name="DetailText" Text="模型不会自动启动。" TextTrimming="CharacterEllipsis" MaxLines="1" ToolTipService.ToolTip="当前任务状态"/>
+          <Grid ColumnSpacing="8">
+           <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+           <Button x:Name="StartButton" Content="启动模型" Style="{StaticResource AccentButtonStyle}" Click="Start_Click"/>
+           <Button x:Name="StopButton" Grid.Column="1" Content="停止模型" IsEnabled="False" Click="Stop_Click"/>
+           <Button Grid.Column="2" HorizontalAlignment="Right" Content="悬浮监控" Click="Float_Click"/>
+           <Button Grid.Column="3" Content="退出" Click="Exit_Click"/>
+          </Grid>
+         </StackPanel>
+        </Border>
+        <Border Style="{StaticResource GalleryCardStyle}">
+         <StackPanel Spacing="16">
+          <TextBlock Text="实时监控" Style="{StaticResource BodyStrongHeadingTextBlockStyle}"/>
+          <Grid ColumnSpacing="24">
+           <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+           <StackPanel Spacing="4">
+            <TextBlock Text="生成速度" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+            <TextBlock x:Name="GenerationText" Text="— token/s" Style="{StaticResource TitleTextBlockStyle}"/>
+           </StackPanel>
+           <Border Grid.Column="1" VerticalAlignment="Center" Padding="10,6" Background="{ThemeResource ControlFillColorSecondaryBrush}" CornerRadius="4"><StackPanel Orientation="Horizontal" Spacing="8"><TextBlock Text="活跃任务" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/><TextBlock x:Name="SlotsText" Text="—" Style="{StaticResource CaptionTextBlockStyle}"/></StackPanel></Border>
+          </Grid>
+          <TextBlock x:Name="UpdatedText" Text="等待首次采样" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" MaxLines="1"/>
+          <Border x:Name="PromptStageBar" Visibility="Collapsed" Padding="12,8" Background="{ThemeResource ControlFillColorSecondaryBrush}" CornerRadius="4"><TextBlock x:Name="PromptStageText" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/></Border>
+          <local:SpeedChart x:Name="MainChart" Height="160"/>
+          <TextBlock x:Name="GpuSummaryText" Text="GPU — · 温度 — · 显存 —" TextWrapping="Wrap"/>
+          <Expander Header="显卡与采集来源" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"><TextBlock x:Name="GpuDetailText" Text="正在读取显卡与采集来源…" TextWrapping="Wrap" IsTextSelectionEnabled="True"/></Expander>
+         </StackPanel>
+        </Border>
+        <Expander Header="连接与采集详情" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+         <StackPanel Spacing="8">
+          <TextBlock x:Name="ConnectionText" Text="服务连接：等待检测" ToolTipService.ToolTip="/health"/>
+          <TextBlock x:Name="TasksStatusText" Text="任务监测：等待检测" ToolTipService.ToolTip="/slots"/>
+          <TextBlock x:Name="MetricsText" Text="性能采集：等待检测" ToolTipService.ToolTip="/metrics"/>
+          <TextBlock x:Name="EndpointsText" Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap" IsTextSelectionEnabled="True"/>
+          <TextBlock x:Name="DiagnosticText" TextWrapping="Wrap" IsTextSelectionEnabled="True" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+         </StackPanel>
+        </Expander>
+        <TextBlock Text="关闭主窗口将收起到系统托盘。外部服务只读；仅能停止本程序启动的模型。" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+       </StackPanel>
+       <StackPanel x:Name="SettingsPage" Visibility="Collapsed" Spacing="4">
+        <StackPanel x:Name="SettingsFields" Spacing="4">
+         <TextBlock Text="模型与运行环境" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Margin="1,0,0,6"/>
+         <Expander Header="模型文件" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" IsExpanded="True">
+          <StackPanel Spacing="16">
+           <TextBox x:Name="ServerPathBox" Header="llama-server.exe 路径"/>
+           <TextBox x:Name="ModelPathBox" Header="GGUF 模型路径"/>
+           <TextBox x:Name="MmprojPathBox" Header="mmproj 路径（无视觉时留空）"/>
+          </StackPanel>
+         </Expander>
+         <Expander Header="监听与推理参数" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" IsExpanded="True">
+          <StackPanel Spacing="16">
+           <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><TextBox x:Name="HostBox" Header="监听地址"/><NumberBox x:Name="PortBox" Grid.Column="1" Header="端口" Minimum="1" Maximum="65535" SpinButtonPlacementMode="Inline"/></Grid>
+           <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><NumberBox x:Name="ContextBox" Header="上下文 token" Minimum="512" Maximum="2147483647" SpinButtonPlacementMode="Compact"/><NumberBox x:Name="PredictBox" Grid.Column="1" Header="最大生成 token" Minimum="1" Maximum="2147483647" SpinButtonPlacementMode="Compact"/></Grid>
+           <TextBox x:Name="ArgumentsBox" Header="额外参数" AcceptsReturn="False" TextWrapping="Wrap" MinHeight="80"/>
+          </StackPanel>
+         </Expander>
+         <TextBlock Text="显存与进程安全" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
+         <Border Style="{StaticResource GalleryCardStyle}"><ToggleSwitch x:Name="FreeComfyToggle" Header="启动前请求 ComfyUI 释放显存" OnContent="已开启（会卸载 ComfyUI 模型）" OffContent="关闭（默认，不影响 ComfyUI）"/></Border>
+         <InfoBar Margin="0,12,0,12" IsOpen="True" IsClosable="False" Severity="Informational" Title="进程安全" Message="端口被占用时禁止启动。停止模型需要确认；有自有模型运行时禁止退出管理器，避免日志管道中断。"/>
+         <Button Content="保存设置" Style="{StaticResource AccentButtonStyle}" Click="Save_Click"/>
+        </StackPanel>
+        <TextBlock x:Name="SettingsPathText" Margin="0,16,0,0" TextWrapping="Wrap" IsTextSelectionEnabled="True" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+        <TextBlock Text="界面壳层基于 Microsoft WinUI Gallery · MIT License" Margin="0,12,0,0" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+       </StackPanel>
+      </Grid>
+     </ScrollViewer>
+     <!-- 日志页不进入 PageScroller，TextBox 使用唯一的内部日志滚动视口。 -->
+     <Grid x:Name="LogsPage" Visibility="Collapsed" RowSpacing="12">
+      <Grid.RowDefinitions><RowDefinition Height="64"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+      <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><TextBlock x:Name="TaskText" Text="尚未发现活跃任务。" TextWrapping="Wrap" IsTextSelectionEnabled="True"/></ScrollViewer>
+      <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8"><Button Content="复制日志" Click="CopyLogs_Click"/><Button Content="打开日志文件夹" Click="OpenLogs_Click"/><Button Content="跳到最新" Click="JumpLatest_Click"/></StackPanel>
+      <ToggleSwitch Grid.Row="2" x:Name="FollowLogsToggle" IsOn="True" OnContent="跟随最新" OffContent="已暂停跟随" Toggled="FollowLogs_Toggled"/>
+      <TextBlock Grid.Row="3" Text="最多显示 800 行；选择文本、拖动或上翻时暂停刷新，点击“跳到最新”恢复。原始 stdout / stderr 保留到磁盘。" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+      <TextBox x:Name="LogBox" Grid.Row="4" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" VerticalAlignment="Stretch" FontFamily="Cascadia Mono, Consolas" FontSize="12" Loaded="LogBox_Loaded" SelectionChanged="LogBox_SelectionChanged" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Visible"/>
+     </Grid>
+    </Grid>
+   </Grid>
+  </NavigationView>
+ </Grid>
+</Window>

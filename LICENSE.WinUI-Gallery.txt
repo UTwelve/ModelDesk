@@ -1,0 +1,49 @@
+来源及适配说明
+
+上游：Microsoft WinUI Gallery
+仓库：https://github.com/microsoft/WinUI-Gallery
+固定提交：14061eeac21c38ae99f302edf3d9136d4f652c4c
+提交日期：2026-10-14
+获取日期：2026-10-16
+获取方式：GitHub 官方 REST API 查询目录/提交；raw.githubusercontent.com 读取固定提交原始源码。
+
+真实抽取及适配清单
+1. WinUIGallery/MainWindow.xaml：RootGrid 双行壳层；原生 TitleBar、PaneToggleRequested；NavigationView 关闭重复的返回/展开按钮；内置设置项。
+2. WinUIGallery/MainWindow.xaml.cs：SetWindowProperties 的 ExtendsContentIntoTitleBar / SetTitleBar / Tall；TitleBar_PaneToggleRequested；AdjustNavigationViewMargin 的 WinUI #9934 最大化/普通窗口间距修复；Loaded 与 ActualThemeChanged 的 caption 颜色更新。
+3. WinUIGallery/Helpers/TitleBarHelper.cs：caption 前景与 hover 主题处理，适配到 GalleryTitleBarHelper.cs。
+4. WinUIGallery/App.xaml：Light / Dark / HighContrast 的 GalleryBackgroundBrush、GalleryBorderBrush、HomePageBackgroundBrush 原始映射。
+5. WinUIGallery/Styles/TextBlock.xaml：SubtitleHeadingTextBlockStyle、BodyStrongHeadingTextBlockStyle 的原生字体与自动化标题层级。
+6. WinUIGallery/Pages/SettingsPage.xaml：36/24 页头边距、1064 内容最大宽度、SettingsCardSpacing=4、SettingsSectionHeaderTextBlockStyle；为避免新增 Toolkit / 实验 SDK 依赖，设置卡片适配为现有 WinUI 原生 Expander、Border、TextBox、NumberBox、ToggleSwitch。
+7. WinUIGallery/Controls/PageHeader.xaml：TitleTextBlockStyle 与 Level1 标题层级，适配为 ModelDesk 的统一页头，不搬入 Gallery 专有的 API/收藏/示例链接业务。
+
+当前提交不存在 NavigationRootPage 文件；导航已合并在 MainWindow。未整仓引用、未引入 Gallery 业务模型、实验 SDK、Toolkit 或图表包。ModelDesk 现有 WindowsAppSDK 2.5.1 保持不变。业务服务、进程安全、进度与采样口径、350ms 日志跟随保护和悬浮 Acrylic 保持原实现。
+
+适配范围边界：Gallery 原版 NavigationView 的内容是 Frame。本项目有意识继续使用现有 Grid 显隐切页，避免重建共享 ModelService、重复启动轮询以及改变日志定时器/窗口生命周期；不声称完整复制 Gallery Frame 导航。Gallery 原版搜索框、自动化隐藏控件、实验菜单、API弹窗/收藏等未引入。未添加侧栏页脚。
+
+适配的本地文件：MainWindow.xaml、MainWindow.xaml.cs、App.xaml、GalleryTitleBarHelper.cs。
+原始源码审计副本：outputs/gallery-20261016/upstream/*.txt。
+GalleryCardStyle 是本项目为业务卡片添加的系统主题样式，不声称为上游原样复制。
+
+以下为上游 LICENSE 的完整原文，发布衍生二进制时须保留本文件。
+
+    MIT License
+
+    Copyright (c) Microsoft Corporation. All rights reserved.
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE

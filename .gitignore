@@ -1,0 +1,22 @@
+# Build artifacts
+bin/
+obj/
+outputs/
+publish/
+.vs/
+*.user
+*.suo
+
+# Local runtime state (logs/config live next to the exe)
+*.log
+logs/
+startup-error.txt
+self-test-result.json
+validate-ui-result.json
+ModelDesk.settings.json
+
+# Local workspace data
+.workbuddy/
+
+# Screenshot helper scripts (session tooling, not part of the app)
+docs/screenshots/_*.ps1
